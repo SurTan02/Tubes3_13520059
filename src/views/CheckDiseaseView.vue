@@ -35,7 +35,7 @@ export default {
 			let dateObj = new Date();
 
 			this.date =
-				dateObj.getDay() +
+				dateObj.getDate() +
 				" " +
 				monthNames[dateObj.getMonth()] +
 				" " +
@@ -127,7 +127,7 @@ export default {
 			<div class="row justify-content-center">
 				<div class="col-auto justify-content-center" v-if="hasResult">
 					{{ date }} - {{ username }} - {{ diseaseName }} -
-					{{ isInfected }} - {{ percentage }}
+					{{ percentage }}% - {{ isInfected }}
 				</div>
 			</div>
 		</div>
