@@ -3,6 +3,11 @@ const express = require("express");
 const history = require("connect-history-api-fallback");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
+const {
+	insertNewDisease,
+	insertNewUser,
+	getDiseaseGene,
+} = require("./dbfunctions.js");
 
 require("dotenv").config();
 
@@ -11,52 +16,6 @@ require("dotenv").config();
  * It will be initialized in the .listen function
  */
 var mongoClient;
-
-/**
- * wrapper function in order to insert new disease
- */
-async function insertNewDisease(diseaseName, diseaseGene) {
-	const result = await mongoClient
-		.db("myFirstDatabase")
-		.collection("disease")
-		.insertOne({
-			name: diseaseName,
-			gene: diseaseGene,
-		});
-	return result;
-}
-
-/**
- * wrapper function in order to
- * insert new user into db with the following data:
- * date, name, disease, isinfected, percentage
- */
-async function insertNewUser(date, name, disease, isInfected, percentage) {
-	const result = await mongoClient
-		.db("myFirstDatabase")
-		.collection("user")
-		.insertOne({
-			date: date,
-			name: name,
-			disease: disease,
-			isInfected: isInfected,
-			percentage: percentage,
-		});
-	return result;
-}
-
-/**
- * wrapper function in order to get
- * list disease with the name x.
- * The function returns array of strings with the disease gene
- */
-async function getDiseaseGene(name) {
-	const result = await mongoClient
-		.db("myFirstDatabase")
-		.collection("disease")
-		.findOne({ name: name });
-	return result;
-}
 
 const app = express();
 
@@ -87,11 +46,25 @@ let knp = (userGenetic, diseasePrediction) => {
 	// untuk diseasePrediction nanti harus di connect ke db dulu
 	// untuk baca DNA sesuai dengan prediksi penyakit yang
 	// diinput user
-
-	return {
-		hasDisease: true,
-		percentage: 70,
+	result = {
+		isInfected: false,
+		percentage: 0,
 	};
+
+	if (diseasePrediction === "tifus") {
+		result.isInfected = false;
+		result.percentage = 10;
+	}
+	if (diseasePrediction === "hiv") {
+		result.isInfected = false;
+		result.percentage = 40;
+	}
+	if (diseasePrediction == "covid") {
+		result.isInfected = true;
+		result.percentage = 90;
+	}
+
+	return result;
 };
 
 /**
@@ -101,6 +74,7 @@ let knp = (userGenetic, diseasePrediction) => {
  */
 app.post("/api/insert-disease", async function (req, res) {
 	let result = await insertNewDisease(
+		mongoClient,
 		req.body.diseaseName,
 		req.body.diseaseGene
 	);
@@ -111,16 +85,37 @@ app.post("/api/insert-disease", async function (req, res) {
 
 /**
  * this function will handl the request from front end
- * to check if a person has disease or not
+ * to check if a person has disease or not.
+ * The response received by this function is in json
+ * in the form of
+ * {
+ * date mengandung tanggal pengecekkan
+ * userGene mengandung string genetic
+ * username mengandung nama pengecek
+ * diseaseName mengandung nama disease
+ * }
+ * yang diakses dengan cara
+ * req.body.userGene, req.body.username, req.body.diseaseName, req.body.date
  */
 
 app.post("/api/check-disease", async function (req, res) {
-	let result = await getDiseaseGene(req.body.diseaseName);
+	let data = req.body;
+	let result = await getDiseaseGene(mongoClient, data.diseaseName);
 	if (result) {
 		console.log(result);
 	}
+	let knpResult = knp(data.userGene, data.diseaseName);
+	insertNewUser(
+		mongoClient,
+		data.date,
+		data.username,
+		data.disease,
+		knpResult.isInfected,
+		knpResult.percentage
+	);
 	res.json({
-		message: knp(req.body.userGene, req.body.diseaseName),
+		isInfected: knpResult.isInfected,
+		percentage: knpResult.percentage,
 	});
 });
 

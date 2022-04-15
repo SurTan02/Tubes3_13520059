@@ -1,13 +1,13 @@
 <script>
-
-import axios from 'axios'
+import axios from "axios";
 
 export default {
 	data() {
 		return {
-			diseaseGene: '',
-			diseaseName: ''
-		}
+			diseaseGene: "",
+			diseaseName: "",
+			submitted: false,
+		};
 	},
 	methods: {
 		/**
@@ -16,31 +16,32 @@ export default {
 		 * submit into the disease database
 		 */
 		receiveNewDisease(e) {
-			let file = e.target.files[0]
+			let file = e.target.files[0];
 
 			let reader = new FileReader();
 
 			reader.onload = () => {
-				this.diseaseGene = reader.result
-			}
+				this.diseaseGene = reader.result;
+			};
 
-			reader.readAsText(file)
+			reader.readAsText(file);
 		},
 		/**
 		 * method in order to submit the disease to backend
 		 */
 		async submitNewDisease() {
-			let apiLink = this.$store.state.apiProxy
-			const response = await axios.post(apiLink + 'insert-disease', {
+			let apiLink = this.$store.state.apiProxy;
+			const response = await axios.post(apiLink + "insert-disease", {
 				diseaseName: this.diseaseName,
-				diseaseGene: this.diseaseGene
-			})
-
-			console.log(response.data.message)
-		}
+				diseaseGene: this.diseaseGene,
+			});
+			console.log(response.data.message);
+			if (response.data.message) {
+				this.submitted = true;
+			}
+		},
 	},
-}
-
+};
 </script>
 
 <template>
@@ -58,7 +59,11 @@ export default {
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-auto">
-							<input type="input" v-model='diseaseName' placeholder="penyakit..." />
+							<input
+								type="input"
+								v-model="diseaseName"
+								placeholder="penyakit..."
+							/>
 						</div>
 					</div>
 				</div>
@@ -68,8 +73,17 @@ export default {
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-auto">
-							<input type="file" ref="file" @change='receiveNewDisease' style="display: none">
-							<input type="button" @click='$refs.file.click' value="upload file..." />
+							<input
+								type="file"
+								ref="file"
+								@change="receiveNewDisease"
+								style="display: none"
+							/>
+							<input
+								type="button"
+								@click="$refs.file.click"
+								value="upload file..."
+							/>
 						</div>
 					</div>
 				</div>
@@ -77,8 +91,13 @@ export default {
 			<div class="submit-button">
 				<div class="row justify-content-center mt-5">
 					<div class="col-auto justify-content-center">
-						<input type="submit" @click='submitNewDisease' />
+						<input type="submit" @click="submitNewDisease" />
 					</div>
+				</div>
+			</div>
+			<div class="row justify-content-center" v-if="submitted">
+				<div class="col-auto justify-content-center">
+					Submitted: {{ diseaseName }}
 				</div>
 			</div>
 		</div>

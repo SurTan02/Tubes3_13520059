@@ -1,14 +1,17 @@
 <script>
-
-import axios from 'axios'
+import axios from "axios";
 
 export default {
 	data() {
 		return {
-			userGene: '',
-			username: '',
-			diseaseName: ''
-		}
+			userGene: "",
+			username: "",
+			diseaseName: "",
+			hasResult: false,
+			date: undefined,
+			isInfected: false,
+			precentage: 0,
+		};
 	},
 	methods: {
 		receiveUserGene(e) {
@@ -17,27 +20,43 @@ export default {
 			let reader = new FileReader();
 
 			reader.onload = () => {
-				this.userGene = reader.result
-			}
+				this.userGene = reader.result;
+			};
 
-			reader.readAsText(file)
+			reader.readAsText(file);
 		},
 		/**
 		 * method in order to pass the data to backend
 		 */
 		async submitCheckDisease() {
-			let apiLink = this.$store.state.apiProxy
-			const response = await axios.post(apiLink + 'check-disease', {
+			let apiLink = this.$store.state.apiProxy;
+			let monthNames = this.$store.state.monthNames;
+
+			let dateObj = new Date();
+
+			this.date =
+				dateObj.getDay() +
+				" " +
+				monthNames[dateObj.getMonth()] +
+				" " +
+				dateObj.getFullYear();
+
+			const response = await axios.post(apiLink + "check-disease", {
+				date: this.date,
 				userGene: this.userGene,
 				username: this.username,
-				diseaseName: this.diseaseName
-			})
+				diseaseName: this.diseaseName,
+			});
 
-			console.log(response.data)
-		}
-	}
-}
+			this.hasResult = true;
 
+			console.log(response);
+
+			this.isInfected = response.data.isInfected;
+			this.percentage = response.data.percentage;
+		},
+	},
+};
 </script>
 
 <template>
@@ -55,7 +74,11 @@ export default {
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-auto">
-							<input type="text" v-model='username' placeholder="<pengguna>" />
+							<input
+								type="text"
+								v-model="username"
+								placeholder="<pengguna>"
+							/>
 						</div>
 					</div>
 				</div>
@@ -65,8 +88,17 @@ export default {
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-auto">
-							<input type="file" ref="file" @change='receiveUserGene' style="display: none">
-							<input type="button" @click='$refs.file.click' value="upload file..." />
+							<input
+								type="file"
+								ref="file"
+								@change="receiveUserGene"
+								style="display: none"
+							/>
+							<input
+								type="button"
+								@click="$refs.file.click"
+								value="upload file..."
+							/>
 						</div>
 					</div>
 				</div>
@@ -76,7 +108,11 @@ export default {
 					</div>
 					<div class="row justify-content-center">
 						<div class="col-auto">
-							<input type="text" v-model='diseaseName' placeholder="<penyakit>" />
+							<input
+								type="text"
+								v-model="diseaseName"
+								placeholder="<penyakit>"
+							/>
 						</div>
 					</div>
 				</div>
@@ -84,8 +120,14 @@ export default {
 			<div class="submit-button">
 				<div class="row justify-content-center mt-5">
 					<div class="col-auto">
-						<input type="submit" @click='submitCheckDisease' />
+						<input type="submit" @click="submitCheckDisease" />
 					</div>
+				</div>
+			</div>
+			<div class="row justify-content-center">
+				<div class="col-auto justify-content-center" v-if="hasResult">
+					{{ date }} - {{ username }} - {{ diseaseName }} -
+					{{ isInfected }} - {{ percentage }}
 				</div>
 			</div>
 		</div>
