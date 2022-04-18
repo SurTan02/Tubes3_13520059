@@ -16,7 +16,7 @@ const bmMatch = (text, pattern) => {
 
     do {
         stepCount++;
-        if (pattern.charAt(j) == text.charAt(i)) {
+        if (pattern.charAt(j) === text.charAt(i)) {
             if (j == 0) {
                 console.log("Jumlah perbandingan karakter: " + stepCount)
                 return i // match
@@ -53,14 +53,14 @@ occurrence of each ASCII char in pattern. */
 } // end of buildLast()
 
 // Tes
-let text = "ACTGCACGTCCAGTGACGATGAAACGTAGACATTCGTAACTAGTAAGTTAACAGATGGACAGTGGAAACGTGCA"
-let pattern = "ATTCGTAACTAGTAAGTTA"
+// let text = "ACTGCACGTCCAGTGACGATGAAACGTAGACATTCGTAACTAGTAAGTTAACAGATGGACAGTGGAAACGTGCA"
+// let pattern = "ATTCGTAACTAGTAAGTTA"
 
-let idxFound = bmMatch(text, pattern)
+// let idxFound = bmMatch(text, pattern)
 
-if (idxFound == -1) {
-    console.log("Pattern tidak ditemukan.")
-} else {
-    console.log("Pattern ditemukan pada indeks " + idxFound);
-    console.log("Pattern yang ditemukan: " + text.substring(idxFound, idxFound + pattern.length))
-}
+// if (idxFound == -1) {
+//     console.log("Pattern tidak ditemukan.")
+// } else {
+//     console.log("Pattern ditemukan pada indeks " + idxFound);
+//     console.log("Pattern yang ditemukan: " + text.substring(idxFound, idxFound + pattern.length))
+// }
