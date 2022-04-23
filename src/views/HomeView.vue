@@ -23,7 +23,7 @@
 			<div class="row justify-content-center">
 				<div class="col-auto justify-content-center">
 					<router-link class="col" to="/list-disease"
-						>List Disaese</router-link
+						>List Disease</router-link
 					>
 				</div>
 			</div>
