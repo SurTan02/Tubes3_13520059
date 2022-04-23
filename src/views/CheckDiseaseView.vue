@@ -1,29 +1,39 @@
 <script>
 import axios from "axios";
+import BackButton from "./../components/BackButton.vue";
 
 export default {
 	data() {
 		return {
+			geneRegex: /^[ACGT]+$/,
+			hasFile: false,
+			fileName: "",
+			fileError: false,
+			fileReader: null,
 			userGene: "",
 			username: "",
 			diseaseName: "",
 			hasResult: false,
+			hasError: false,
 			date: undefined,
 			isInfected: false,
 			precentage: 0,
+			usernameSubmitted: "",
+			diseaseNameSubmitted: "",
 		};
+	},
+	components: {
+		BackButton,
 	},
 	methods: {
 		receiveUserGene(e) {
 			let file = e.target.files[0];
-
-			let reader = new FileReader();
-
-			reader.onload = () => {
-				this.userGene = reader.result;
-			};
-
-			reader.readAsText(file);
+			if (file !== null && file !== undefined) {
+				this.hasFile = true;
+				this.fileName = file.name;
+				this.fileError = false;
+				this.fileReader.readAsText(file);
+			}
 		},
 		/**
 		 * method in order to pass the data to backend
@@ -48,13 +58,37 @@ export default {
 				diseaseName: this.diseaseName,
 			});
 
-			this.hasResult = true;
+			if (response.data.isInfected != null) {
+				this.hasResult = true;
+				this.hasError = false;
 
-			console.log(response);
-
-			this.isInfected = response.data.isInfected;
-			this.percentage = response.data.percentage;
+				this.isInfected = response.data.isInfected;
+				this.percentage = response.data.percentage;
+				this.usernameSubmitted = this.username;
+				this.diseaseNameSubmitted = this.diseaseName;
+			} else {
+				this.hasError = true;
+				this.hasResult = false;
+			}
 		},
+	},
+	mounted() {
+		if (this.fileReader == null) {
+			this.fileReader = new FileReader();
+
+			this.fileReader.onload = () => {
+				if (this.geneRegex.test(this.fileReader.result)) {
+					this.userGene = this.fileReader.result;
+					this.fileError = false;
+				} else {
+					this.fileError = true;
+				}
+			};
+
+			this.fileReader.onerror = (error) => {
+				console.error(error);
+			};
+		}
 	},
 };
 </script>
@@ -62,6 +96,11 @@ export default {
 <template>
 	<div class="container-fluid">
 		<div class="box">
+			<div class="row justify-content-start">
+				<div class="col-auto">
+					<BackButton />
+				</div>
+			</div>
 			<div class="row justify-content-center mt-5">
 				<div class="col-5 text-center">
 					<div class="heading">Tes DNA</div>
@@ -101,6 +140,14 @@ export default {
 							/>
 						</div>
 					</div>
+					<div class="row justify-content-center">
+						<div class="col-auto">
+							<div v-if="hasFile">{{ fileName }} uploaded</div>
+							<div v-if="fileError">
+								The gene you uploaded is wrong
+							</div>
+						</div>
+					</div>
 				</div>
 				<div class="col-4 justify-content-center">
 					<div class="row justify-content-center">
@@ -126,8 +173,12 @@ export default {
 			</div>
 			<div class="row justify-content-center">
 				<div class="col-auto justify-content-center" v-if="hasResult">
-					{{ date }} - {{ username }} - {{ diseaseName }} -
-					{{ percentage }}% - {{ isInfected }}
+					{{ date }} - {{ usernameSubmitted }} -
+					{{ diseaseNameSubmitted }} - {{ percentage }}% -
+					{{ isInfected }}
+				</div>
+				<div class="col-auto justify-content-center" v-if="hasError">
+					There is no disease with that name in the database
 				</div>
 			</div>
 		</div>

@@ -3,11 +3,8 @@ const express = require("express");
 const history = require("connect-history-api-fallback");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
-const {
-	insertNewDisease,
-	insertNewUser,
-	getDiseaseGene,
-} = require("./dbfunctions.js");
+const dbfunction = require("./dbfunctions.js");
+const { kmp } = require("./kmp.js");
 
 require("dotenv").config();
 
@@ -37,35 +34,79 @@ app.use(
 );
 app.use(staticFileMiddleware);
 
-let knp = (userGenetic, diseasePrediction) => {
-	// userGenetic bisa langsung diolah, karena udah dibaca
-	// mis file yang diupload adalah test1.txt
-	// dan, isi test1.txt adalah ADGC
-	// maka userGenetic = ADGC
+/**
+ * calculate the table in order to be used for
+ * the KMP algorithm.
+ * The function returns an array containing the values in the table
+ */
+// function computeTable(param) {
+// 	let result = [];
+// 	let pos = 2;
+// 	let cnd = 0;
 
-	// untuk diseasePrediction nanti harus di connect ke db dulu
-	// untuk baca DNA sesuai dengan prediksi penyakit yang
-	// diinput user
-	result = {
-		isInfected: false,
-		percentage: 0,
-	};
+// 	result[0] = -1;
+// 	result[1] = 0;
 
-	if (diseasePrediction === "tifus") {
-		result.isInfected = false;
-		result.percentage = 10;
-	}
-	if (diseasePrediction === "hiv") {
-		result.isInfected = false;
-		result.percentage = 40;
-	}
-	if (diseasePrediction == "covid") {
-		result.isInfected = true;
-		result.percentage = 90;
-	}
+// 	while(pos < param.length) {
+// 		if(param[pos - 1] == param[cnd]) {
+// 			cnd += 1;
+// 			result[pos] = cnd;
+// 			pos += 1;
+// 		} else if(cnd > 0) {
+// 			cnd = result[cnd];
+// 		} else {
+// 			result[pos] = 0;
+// 			pos += 1;
+// 		}
+// 	}
 
-	return result;
-};
+// 	return result;
+// }
+
+/**
+ * the KMP algorithm
+ * returns -1 if the string aren't the same
+ * returns 0 if the strings are the same
+ */
+// function kmp(userGene, diseaseGene) {
+// 	let ind = -1;
+// 	let m = 0;
+// 	let i = 0;
+// 	let table = computeTable(diseaseGene);
+
+// 	while(m + i < diseaseGene.length) {
+// 		if(diseaseGene[i] == userGene[m+i]) {
+// 			if(i == diseaseGene.length - 1) {
+// 				return m;
+// 			}
+// 			i += 1;
+// 		} else {
+// 			m += i - table[i];
+// 			if(table[i] > -1) {
+// 				i = table[i];
+// 			} else {
+// 				i = 0;
+// 			}
+// 		}
+// 	}
+
+// 	return ind;
+// }
+
+function hamming(userGenetic, diseaseGenetic) {
+	let i = 0;
+	let same = 0;
+	while (i < diseaseGenetic.length) {
+		if (userGenetic[i] == diseaseGenetic[i]) {
+			same += 1;
+		}
+		i += 1;
+	}
+	let percent = same / userGenetic.length;
+	percent *= 100;
+	percent = percent.toFixed(3);
+	return percent;
+}
 
 /**
  * this function will handle the POST request
@@ -73,7 +114,7 @@ let knp = (userGenetic, diseasePrediction) => {
  * into the database
  */
 app.post("/api/insert-disease", async function (req, res) {
-	let result = await insertNewDisease(
+	let result = await dbfunction.insertNewDisease(
 		mongoClient,
 		req.body.diseaseName,
 		req.body.diseaseGene
@@ -100,22 +141,79 @@ app.post("/api/insert-disease", async function (req, res) {
 
 app.post("/api/check-disease", async function (req, res) {
 	let data = req.body;
-	let result = await getDiseaseGene(mongoClient, data.diseaseName);
-	if (result) {
-		console.log(result);
-	}
-	let knpResult = knp(data.userGene, data.diseaseName);
-	insertNewUser(
+	let disease = await dbfunction.getDiseaseGene(
 		mongoClient,
-		data.date,
-		data.username,
-		data.disease,
-		knpResult.isInfected,
-		knpResult.percentage
+		data.diseaseName
 	);
+	let isInfected = null;
+	let percentage = null;
+	if (disease) {
+		isInfected = kmp(data.userGene, disease.gene);
+		percentage = hamming(data.userGene, disease.gene);
+		if (percentage >= 80) {
+			isInfected = true;
+		} else {
+			isInfected = false;
+		}
+		dbfunction.insertNewUser(
+			mongoClient,
+			data.date,
+			data.username,
+			data.diseaseName,
+			isInfected,
+			percentage
+		);
+	}
 	res.json({
-		isInfected: knpResult.isInfected,
-		percentage: knpResult.percentage,
+		isInfected: isInfected,
+		percentage: percentage,
+	});
+});
+
+/**
+ * this function will handle the request from front end to
+ * get list of the checks that has happened at a particular date
+ * or on a specific virus name or both.
+ * access the finding stuff using req.body.message
+ */
+
+app.post("/api/list-disease", async function (req, res) {
+	let data = req.body;
+	/**
+	 * the request from front end is separated to different types as
+	 * specified by the specification for the three methods of input
+	 */
+	let result;
+	if (data.type == "date") {
+		result = await dbfunction.getUserFromDate(mongoClient, data.message);
+	} else if (data.type == "disease") {
+		result = await dbfunction.getUserFromDisease(mongoClient, data.message);
+		/**
+		 * get data from both date and disease
+		 * using set to make sure that we do not have duplicate
+		 */
+	} else if (data.type == "both") {
+		let splitMessage = data.message.split(" ");
+		let dateStr =
+			splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2];
+		let diseaseStr = splitMessage[3];
+
+		result = await dbfunction.getUserFromDateAndDisease(
+			mongoClient,
+			dateStr,
+			diseaseStr
+		);
+	}
+
+	let hasResult = false;
+
+	if (result != null) {
+		console.log("has result");
+		hasResult = true;
+	}
+	res.json({
+		hasResult: hasResult,
+		userArr: result,
 	});
 });
 

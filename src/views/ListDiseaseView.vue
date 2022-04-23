@@ -1,14 +1,24 @@
 <script>
+import axios from "axios";
 import ListDisease from "./../components/ListDisease.vue";
+import BackButton from "./../components/BackButton.vue";
 
 export default {
 	data() {
 		return {
 			receiveInputFunc: undefined,
+			userInput: "",
+			userArr: [],
+			dateRegex:
+				/(\d{1,2}\s((January)|(February)|(March)|(April)|(May)|(June)|(July)|(August)|(September)|(October)|(November)|(December)).*\d{1,4})/,
+			diseaseRegex: /[A-Za-z].*/,
+			combinedRegex:
+				/(\d{1,2}\s((January)|(February)|(March)|(April)|(May)|(June)|(July)|(August)|(September)|(October)|(November)|(December)).*\d{1,4})\s*([A-Za-z].*)/,
 		};
 	},
 	components: {
 		ListDisease,
+		BackButton,
 	},
 	mounted() {
 		/**
@@ -23,7 +33,37 @@ export default {
 			};
 		};
 
-		this.receiveInputFunc = debounce(() => {}, 1000);
+		this.receiveInputFunc = debounce(async () => {
+			let apiLink = this.$store.state.apiProxy;
+
+			let isDate = this.dateRegex.test(this.userInput);
+			let isDisease = this.diseaseRegex.test(this.userInput);
+			let isBoth = this.combinedRegex.test(this.userInput);
+
+			let inputType = "";
+			if (isBoth) {
+				inputType = "both";
+			} else if (isDate) {
+				inputType = "date";
+			} else if (isDisease) {
+				inputType = "disease";
+			} else {
+				return;
+			}
+
+			console.log(inputType);
+
+			const response = await axios.post(apiLink + "list-disease", {
+				type: inputType,
+				message: this.userInput,
+			});
+			if (response.data.hasResult) {
+				console.log(response.data.userArr);
+				this.userArr = response.data.userArr;
+			} else {
+				this.userArr = [];
+			}
+		}, 1000);
 	},
 	methods: {
 		callFunc() {
@@ -36,13 +76,24 @@ export default {
 <template>
 	<div class="container-fluid">
 		<div class="result-box">
+			<!-- <div class='row justify-content-start'>
+				<div class='col-auto'>
+					<BackButton />
+				</div>
+			</div> -->
 			<div class="sticky">
 				<div class="row">
+					<div class="row justify-content-start">
+						<div class="col-auto">
+							<BackButton />
+						</div>
+					</div>
 					<div class="col-auto">
 						<div class="input">
 							<input
 								type="text"
 								placeholder="<tanggal_prediksi> <nama_penyakit>"
+								v-model="userInput"
 								@input="callFunc"
 							/>
 						</div>
@@ -52,11 +103,15 @@ export default {
 			<div class="tambal">
 				<div
 					class="row justify-content-center mt-5"
-					v-for="index in 10"
+					v-for="(user, index) in userArr"
 					:key="index"
 				>
 					<div class="col-auto justify-content-center">
-						<ListDisease> Hello </ListDisease>
+						<ListDisease>
+							{{ index + 1 }}. {{ user.date }} - {{ user.name }} -
+							{{ user.disease }} - {{ user.isInfected }} -
+							{{ user.percentage }}%
+						</ListDisease>
 					</div>
 				</div>
 			</div>

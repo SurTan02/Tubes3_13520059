@@ -1,13 +1,23 @@
 <script>
 import axios from "axios";
+import BackButton from "./../components/BackButton.vue";
 
 export default {
 	data() {
 		return {
+			geneRegex: /^[ACGT]+$/,
+			hasFile: false,
+			fileName: "",
+			fileError: false,
 			diseaseGene: "",
 			diseaseName: "",
+			diseaseNameSubmitted: "",
 			submitted: false,
+			fileReader: null,
 		};
+	},
+	components: {
+		BackButton,
 	},
 	methods: {
 		/**
@@ -18,13 +28,12 @@ export default {
 		receiveNewDisease(e) {
 			let file = e.target.files[0];
 
-			let reader = new FileReader();
-
-			reader.onload = () => {
-				this.diseaseGene = reader.result;
-			};
-
-			reader.readAsText(file);
+			if (file !== null && file !== undefined) {
+				this.hasFile = true;
+				this.fileName = file.name;
+				this.fileError = false;
+				this.fileReader.readAsText(file);
+			}
 		},
 		/**
 		 * method in order to submit the disease to backend
@@ -38,8 +47,27 @@ export default {
 			console.log(response.data.message);
 			if (response.data.message) {
 				this.submitted = true;
+				this.diseaseNameSubmitted = this.diseaseName;
 			}
 		},
+	},
+	mounted() {
+		if (this.fileReader == null) {
+			this.fileReader = new FileReader();
+
+			this.fileReader.onload = () => {
+				if (this.geneRegex.test(this.fileReader.result)) {
+					this.diseaseGene = this.fileReader.result;
+					this.fileError = false;
+				} else {
+					this.fileError = true;
+				}
+			};
+
+			this.fileReader.onerror = (error) => {
+				console.error(error);
+			};
+		}
 	},
 };
 </script>
@@ -47,6 +75,11 @@ export default {
 <template>
 	<div class="container-fluid">
 		<div class="box">
+			<div class="row justify-content-start">
+				<div class="col-auto">
+					<BackButton />
+				</div>
+			</div>
 			<div class="row justify-content-center mt-5">
 				<div class="col-6 text-center">
 					<div class="heading">Tambahkan Penyakit</div>
@@ -86,6 +119,14 @@ export default {
 							/>
 						</div>
 					</div>
+					<div class="row justify-content-center">
+						<div class="col-auto">
+							<div v-if="hasFile">{{ fileName }} uploaded</div>
+							<div v-if="fileError">
+								The gene you uploaded is wrong
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<div class="submit-button">
@@ -97,7 +138,7 @@ export default {
 			</div>
 			<div class="row justify-content-center" v-if="submitted">
 				<div class="col-auto justify-content-center">
-					Submitted: {{ diseaseName }}
+					Submitted: {{ diseaseNameSubmitted }}
 				</div>
 			</div>
 		</div>
