@@ -7,7 +7,7 @@ const bmMatch = (text, pattern) => {
 	let stepCount = 0;
 
 	if (i > n - 1) {
-		console.log("Jumlah perbandingan karakter: " + stepCount);
+		// console.log("Jumlah perbandingan karakter: " + stepCount);
 		return -1; // no match if pattern is longer than text
 	}
 
@@ -23,7 +23,7 @@ const bmMatch = (text, pattern) => {
 		stepCount++;
 		if (pattern.charAt(j) === text.charAt(i)) {
 			if (j == 0) {
-				console.log("Jumlah perbandingan karakter: " + stepCount);
+				// console.log("Jumlah perbandingan karakter: " + stepCount);
 				return i; // match
 			} else {
 				// looking-glass technique
@@ -39,7 +39,7 @@ const bmMatch = (text, pattern) => {
 		}
 	} while (i <= n - 1);
 
-	console.log("Jumlah perbandingan karakter: " + stepCount);
+	// console.log("Jumlah perbandingan karakter: " + stepCount);
 	return -1; // no match
 }; // end of bmMatch()
 
@@ -75,3 +75,7 @@ occurrence of each ASCII char in pattern. */
 //     console.log("Pattern ditemukan pada indeks " + idxFound);
 //     console.log("Pattern yang ditemukan: " + text.substring(idxFound, idxFound + pattern.length))
 // }
+
+module.exports = {
+	bm: bmMatch,
+};

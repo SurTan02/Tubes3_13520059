@@ -5,6 +5,7 @@ const cors = require("cors");
 const { MongoClient } = require("mongodb");
 const dbfunction = require("./dbfunctions.js");
 const { kmp } = require("./kmp.js");
+const { bm } = require("./boyerMoore.js");
 
 require("dotenv").config();
 
@@ -93,19 +94,48 @@ app.use(staticFileMiddleware);
 // 	return ind;
 // }
 
-function hamming(userGenetic, diseaseGenetic) {
-	let i = 0;
-	let same = 0;
-	while (i < diseaseGenetic.length) {
-		if (userGenetic[i] == diseaseGenetic[i]) {
-			same += 1;
+// function hamming(userGenetic, diseaseGenetic) {
+// 	let i = 0;
+// 	let same = 0;
+// 	while(i < diseaseGenetic.length) {
+// 		if(userGenetic[i] == diseaseGenetic[i]) {
+// 			same += 1;
+// 		}
+// 		i += 1;
+// 	}
+// 	let percent = same / userGenetic.length;
+// 	percent *= 100;
+// 	percent = percent.toFixed(3);
+// 	return percent;
+// }
+
+/**
+ * str2.length < str1.length
+ */
+
+function getMatch(str1, str2) {
+	let result = 0;
+	for (let i = 0; i < str2.length; ++i) {
+		if (str1[i] === str2[i]) {
+			result += 1;
 		}
-		i += 1;
 	}
-	let percent = same / userGenetic.length;
-	percent *= 100;
-	percent = percent.toFixed(3);
-	return percent;
+	return result;
+}
+
+function hamming(str1, str2) {
+	let index = 0;
+	let strLen = str2.length;
+	let matchNum = 0;
+	while (matchNum !== strLen && index + strLen <= str1.length) {
+		let temp = getMatch(str1.substring(index, index + strLen), str2);
+		if (temp > matchNum) {
+			matchNum = temp;
+		}
+		index++;
+	}
+
+	return (matchNum * 100) / strLen;
 }
 
 /**
@@ -148,12 +178,23 @@ app.post("/api/check-disease", async function (req, res) {
 	let isInfected = null;
 	let percentage = null;
 	if (disease) {
-		isInfected = kmp(data.userGene, disease.gene);
-		percentage = hamming(data.userGene, disease.gene);
-		if (percentage >= 80) {
+		if (kmp(data.userGene, disease.gene) !== -1) {
 			isInfected = true;
 		} else {
 			isInfected = false;
+		}
+		// if(bm(data.userGene, disease.geme) !== -1) {
+		// 	isInfected = true;
+		// } else {
+		// 	isInfected = false;
+		// }
+		if (isInfected) {
+			percentage = 100;
+		} else {
+			percentage = hamming(data.userGene, disease.gene);
+			if (percentage > 80) {
+				isInfected = true;
+			}
 		}
 		dbfunction.insertNewUser(
 			mongoClient,
