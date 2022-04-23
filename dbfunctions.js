@@ -41,7 +41,8 @@ async function insertNewUser(
 /**
  * wrapper function in order to get
  * list disease with the name x.
- * The function returns the disease gene
+ * The function returns the disease gene.
+ * Returns null if there is no such disease in db
  */
 async function getDiseaseGene(mongoClient, name) {
 	const result = await mongoClient
@@ -51,8 +52,66 @@ async function getDiseaseGene(mongoClient, name) {
 	return result;
 }
 
+/**
+ * wrapper function in order to get
+ * list of user that at a certain date.
+ * returns the result in an array.
+ * Returns empty array if there is nothing at the date
+ */
+async function getUserFromDate(mongoClient, date) {
+	let result = [];
+	const resultCursor = await mongoClient
+		.db("myFirstDatabase")
+		.collection("user")
+		.find({ date: date })
+		.forEach((data) => {
+			result.push(data);
+		});
+	return result;
+}
+
+/**
+ * wrapper function in order to get
+ * list of user with the disease name
+ * returns the result in an array.
+ * Returns empty array if there is no disease in the user
+ */
+async function getUserFromDisease(mongoClient, diseaseName) {
+	let result = [];
+	const resultCursor = await mongoClient
+		.db("myFirstDatabase")
+		.collection("user")
+		.find({ disease: diseaseName })
+		.forEach((data) => {
+			result.push(data);
+		});
+	return result;
+}
+
+/**
+ * wrapper fucntion in order to get
+ * list of user with both disease name and date
+ * returns the result in an array
+ * returns empty array if there is no disease checked at the date
+ */
+
+async function getUserFromDateAndDisease(mongoClient, date, diseaseName) {
+	let result = [];
+	const resultCursor = await mongoClient
+		.db("myFirstDatabase")
+		.collection("user")
+		.find({ date: date, disease: diseaseName })
+		.forEach((data) => {
+			result.push(data);
+		});
+	return result;
+}
+
 module.exports = {
 	insertNewDisease: insertNewDisease,
 	insertNewUser: insertNewUser,
 	getDiseaseGene: getDiseaseGene,
+	getUserFromDate: getUserFromDate,
+	getUserFromDisease: getUserFromDisease,
+	getUserFromDateAndDisease: getUserFromDateAndDisease,
 };
