@@ -61,7 +61,11 @@ export default {
 			if (response.data.hasResult) {
 				console.log(response.data.userArr);
 				this.userArr = response.data.userArr;
-				this.noData = false;
+				if (this.userArr.length === 0) {
+					this.noData = true;
+				} else {
+					this.noData = false;
+				}
 			} else {
 				this.userArr = [];
 				this.noData = true;
