@@ -9,6 +9,7 @@ export default {
 			receiveInputFunc: undefined,
 			userInput: "",
 			userArr: [],
+			noData: true,
 			dateRegex:
 				/(\d{1,2}\s((January)|(February)|(March)|(April)|(May)|(June)|(July)|(August)|(September)|(October)|(November)|(December)).*\d{1,4})/,
 			diseaseRegex: /[A-Za-z].*/,
@@ -60,8 +61,10 @@ export default {
 			if (response.data.hasResult) {
 				console.log(response.data.userArr);
 				this.userArr = response.data.userArr;
+				this.noData = false;
 			} else {
 				this.userArr = [];
+				this.noData = true;
 			}
 		}, 1000);
 	},
@@ -101,6 +104,17 @@ export default {
 				</div>
 			</div>
 			<div class="tambal">
+				<div class="row justify-content-center mt-5" v-if="noData">
+					<div class="no-file-head row justify-content-center mt-3">
+						No Result Found
+					</div>
+					<div class="no-file-body row justify-content-center mt-2">
+						Maybe fill the search bar or
+					</div>
+					<div class="no-file-body row justify-content-center">
+						try a different keyword
+					</div>
+				</div>
 				<div
 					class="row justify-content-center mt-5"
 					v-for="(user, index) in userArr"
@@ -232,5 +246,16 @@ export default {
 .tambal {
 	height: 100%;
 	overflow: scroll;
+}
+
+.no-file-head {
+	color: #504e4e;
+	font-size: larger;
+	font-weight: 600;
+}
+
+.no-file-body {
+	/* color: #878787; */
+	color: #504e4ea7;
 }
 </style>

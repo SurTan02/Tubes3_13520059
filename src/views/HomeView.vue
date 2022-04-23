@@ -28,18 +28,18 @@
 				</div>
 			</div>
 			<div class="row justify-content-center mt-5">
-				<div class="col-5 text-center">
-					<div class="footer">nama-nim</div>
+				<div class="col-10 text-center">
+					<div class="footer">Suryanto - 13520059</div>
 				</div>
 			</div>
 			<div class="row justify-content-center mt-4">
-				<div class="col-5 text-center">
-					<div class="footer">nama-nim</div>
+				<div class="col-10 text-center">
+					<div class="footer">Steven - 13520131</div>
 				</div>
 			</div>
 			<div class="row justify-content-center mt-4">
-				<div class="col-5 text-center">
-					<div class="footer">nama-nim</div>
+				<div class="col-10 text-center">
+					<div class="footer">David Karel Halomoan - 13520154</div>
 				</div>
 			</div>
 		</div>
@@ -67,7 +67,7 @@
 	color: #fff;
 	margin: 0;
 	font-size: 20px;
-	text-shadow: 0.5px 0.5px 2px grey;
+	text-shadow: 0.5px 0.5px 2px rgb(13, 76, 76);
 	text-align: center;
 	font-weight: bold;
 	margin-top: 3px;
