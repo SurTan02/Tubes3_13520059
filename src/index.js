@@ -196,6 +196,7 @@ app.post("/api/check-disease", async function (req, res) {
 				isInfected = true;
 			}
 		}
+		percentage = percentage.toFixed(4);
 		dbfunction.insertNewUser(
 			mongoClient,
 			data.date,
