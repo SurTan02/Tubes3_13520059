@@ -5,10 +5,8 @@ import BackButton from "./../components/BackButton.vue";
 export default {
 	data() {
 		return {
-			geneRegex: /^[ACGT]+$/,
 			hasFile: false,
 			fileName: "",
-			fileError: false,
 			fileReader: null,
 			userGene: "",
 			username: "",
@@ -20,6 +18,7 @@ export default {
 			precentage: 0,
 			usernameSubmitted: "",
 			diseaseNameSubmitted: "",
+			submitError: false,
 		};
 	},
 	components: {
@@ -31,7 +30,6 @@ export default {
 			if (file !== null && file !== undefined) {
 				this.hasFile = true;
 				this.fileName = file.name;
-				this.fileError = false;
 				this.fileReader.readAsText(file);
 			}
 		},
@@ -58,6 +56,13 @@ export default {
 				diseaseName: this.diseaseName,
 			});
 
+			if (response.data.error) {
+				this.submitError = true;
+				return;
+			}
+
+			this.submitError = false;
+
 			if (response.data.isInfected != null) {
 				this.hasResult = true;
 				this.hasError = false;
@@ -77,12 +82,7 @@ export default {
 			this.fileReader = new FileReader();
 
 			this.fileReader.onload = () => {
-				if (this.geneRegex.test(this.fileReader.result)) {
-					this.userGene = this.fileReader.result;
-					this.fileError = false;
-				} else {
-					this.fileError = true;
-				}
+				this.userGene = this.fileReader.result;
 			};
 
 			this.fileReader.onerror = (error) => {
@@ -143,9 +143,6 @@ export default {
 					<div class="row justify-content-center">
 						<div class="col-auto">
 							<div v-if="hasFile">{{ fileName }} uploaded</div>
-							<div v-if="fileError">
-								The gene you uploaded is wrong
-							</div>
 						</div>
 					</div>
 				</div>
@@ -179,6 +176,9 @@ export default {
 				</div>
 				<div class="col-auto justify-content-center" v-if="hasError">
 					There is no disease with that name in the database
+				</div>
+				<div class="col-auto justify-content-center" v-if="submitError">
+					The user gene uploaded is wrong
 				</div>
 			</div>
 		</div>

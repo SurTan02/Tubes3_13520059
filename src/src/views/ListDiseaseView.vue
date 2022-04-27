@@ -37,27 +37,20 @@ export default {
 		this.receiveInputFunc = debounce(async () => {
 			let apiLink = this.$store.state.apiProxy;
 
-			let isDate = this.dateRegex.test(this.userInput);
-			let isDisease = this.diseaseRegex.test(this.userInput);
-			let isBoth = this.combinedRegex.test(this.userInput);
-
-			let inputType = "";
-			if (isBoth) {
-				inputType = "both";
-			} else if (isDate) {
-				inputType = "date";
-			} else if (isDisease) {
-				inputType = "disease";
-			} else {
-				return;
-			}
-
-			console.log(inputType);
-
+			// let inputType = "";
+			// if (isBoth) {
+			// 	inputType = "both";
+			// } else if (isDate) {
+			// 	inputType = "date";
+			// } else if (isDisease) {
+			// 	inputType = "disease";
+			// } else {
+			// 	return;
+			// }
 			const response = await axios.post(apiLink + "list-disease", {
-				type: inputType,
 				message: this.userInput,
 			});
+
 			if (response.data.hasResult) {
 				console.log(response.data.userArr);
 				this.userArr = response.data.userArr;
@@ -70,7 +63,7 @@ export default {
 				this.userArr = [];
 				this.noData = true;
 			}
-		}, 1000);
+		}, 200);
 	},
 	methods: {
 		callFunc() {

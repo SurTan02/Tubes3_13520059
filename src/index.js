@@ -35,79 +35,12 @@ app.use(
 );
 app.use(staticFileMiddleware);
 
-/**
- * calculate the table in order to be used for
- * the KMP algorithm.
- * The function returns an array containing the values in the table
- */
-// function computeTable(param) {
-// 	let result = [];
-// 	let pos = 2;
-// 	let cnd = 0;
-
-// 	result[0] = -1;
-// 	result[1] = 0;
-
-// 	while(pos < param.length) {
-// 		if(param[pos - 1] == param[cnd]) {
-// 			cnd += 1;
-// 			result[pos] = cnd;
-// 			pos += 1;
-// 		} else if(cnd > 0) {
-// 			cnd = result[cnd];
-// 		} else {
-// 			result[pos] = 0;
-// 			pos += 1;
-// 		}
-// 	}
-
-// 	return result;
-// }
-
-/**
- * the KMP algorithm
- * returns -1 if the string aren't the same
- * returns 0 if the strings are the same
- */
-// function kmp(userGene, diseaseGene) {
-// 	let ind = -1;
-// 	let m = 0;
-// 	let i = 0;
-// 	let table = computeTable(diseaseGene);
-
-// 	while(m + i < diseaseGene.length) {
-// 		if(diseaseGene[i] == userGene[m+i]) {
-// 			if(i == diseaseGene.length - 1) {
-// 				return m;
-// 			}
-// 			i += 1;
-// 		} else {
-// 			m += i - table[i];
-// 			if(table[i] > -1) {
-// 				i = table[i];
-// 			} else {
-// 				i = 0;
-// 			}
-// 		}
-// 	}
-
-// 	return ind;
-// }
-
-// function hamming(userGenetic, diseaseGenetic) {
-// 	let i = 0;
-// 	let same = 0;
-// 	while(i < diseaseGenetic.length) {
-// 		if(userGenetic[i] == diseaseGenetic[i]) {
-// 			same += 1;
-// 		}
-// 		i += 1;
-// 	}
-// 	let percent = same / userGenetic.length;
-// 	percent *= 100;
-// 	percent = percent.toFixed(3);
-// 	return percent;
-// }
+geneRegex = /^[ACGT]+$/;
+diseaseNameRegex = /[A-Za-z0-9].*/;
+dateRegex =
+	/(\d{1,2}\s((January)|(February)|(March)|(April)|(May)|(June)|(July)|(August)|(September)|(October)|(November)|(December)).*\d{1,4})/;
+combinedRegex =
+	/(\d{1,2}\s((January)|(February)|(March)|(April)|(May)|(June)|(July)|(August)|(September)|(October)|(November)|(December)).*\d{1,4})\s*([A-Za-z0-9].*)/;
 
 /**
  * str2.length < str1.length
@@ -144,14 +77,20 @@ function hamming(str1, str2) {
  * into the database
  */
 app.post("/api/insert-disease", async function (req, res) {
-	let result = await dbfunction.insertNewDisease(
-		mongoClient,
-		req.body.diseaseName,
-		req.body.diseaseGene
-	);
-	res.json({
-		message: true,
-	});
+	if (geneRegex.test(req.body.diseaseGene)) {
+		let result = await dbfunction.insertNewDisease(
+			mongoClient,
+			req.body.diseaseName,
+			req.body.diseaseGene
+		);
+		res.json({
+			message: true,
+		});
+	} else {
+		res.json({
+			message: false,
+		});
+	}
 });
 
 /**
@@ -171,45 +110,54 @@ app.post("/api/insert-disease", async function (req, res) {
 
 app.post("/api/check-disease", async function (req, res) {
 	let data = req.body;
-	let disease = await dbfunction.getDiseaseGene(
-		mongoClient,
-		data.diseaseName
-	);
-	let isInfected = null;
-	let percentage = null;
-	if (disease) {
-		if (kmp(data.userGene, disease.gene) !== -1) {
-			isInfected = true;
-		} else {
-			isInfected = false;
-		}
-		// if(bm(data.userGene, disease.geme) !== -1) {
-		// 	isInfected = true;
-		// } else {
-		// 	isInfected = false;
-		// }
-		if (isInfected) {
-			percentage = 100;
-		} else {
-			percentage = hamming(data.userGene, disease.gene);
-			if (percentage > 80) {
-				isInfected = true;
-			}
-		}
-		percentage = percentage.toFixed(4);
-		dbfunction.insertNewUser(
+	if (geneRegex.test(data.userGene)) {
+		let disease = await dbfunction.getDiseaseGene(
 			mongoClient,
-			data.date,
-			data.username,
-			data.diseaseName,
-			isInfected,
-			percentage
+			data.diseaseName
 		);
+		let isInfected = null;
+		let percentage = null;
+		if (disease) {
+			if (kmp(data.userGene, disease.gene) !== -1) {
+				isInfected = true;
+			} else {
+				isInfected = false;
+			}
+			// if(bm(data.userGene, disease.geme) !== -1) {
+			// 	isInfected = true;
+			// } else {
+			// 	isInfected = false;
+			// }
+			if (isInfected) {
+				percentage = 100;
+			} else {
+				percentage = hamming(data.userGene, disease.gene);
+				if (percentage > 80) {
+					isInfected = true;
+				}
+			}
+			percentage = percentage.toFixed(4);
+			dbfunction.insertNewUser(
+				mongoClient,
+				data.date,
+				data.username,
+				data.diseaseName,
+				isInfected,
+				percentage
+			);
+		}
+		res.json({
+			isInfected: isInfected,
+			percentage: percentage,
+			error: false,
+		});
+	} else {
+		res.json({
+			isInfected: null,
+			percentage: null,
+			error: true,
+		});
 	}
-	res.json({
-		isInfected: isInfected,
-		percentage: percentage,
-	});
 });
 
 /**
@@ -221,20 +169,34 @@ app.post("/api/check-disease", async function (req, res) {
 
 app.post("/api/list-disease", async function (req, res) {
 	let data = req.body;
+	let type;
+	if (diseaseNameRegex.test(data.message)) {
+		type = "disease";
+	}
+	if (dateRegex.test(data.message)) {
+		type = "date";
+	}
+	if (isNaN(data.message[data.message.length - 1])) {
+		if (combinedRegex.test(data.message)) {
+			type = "both";
+		}
+	}
+
+	console.log(type);
 	/**
 	 * the request from front end is separated to different types as
 	 * specified by the specification for the three methods of input
 	 */
 	let result;
-	if (data.type == "date") {
+	if (type == "date") {
 		result = await dbfunction.getUserFromDate(mongoClient, data.message);
-	} else if (data.type == "disease") {
+	} else if (type == "disease") {
 		result = await dbfunction.getUserFromDisease(mongoClient, data.message);
 		/**
 		 * get data from both date and disease
 		 * using set to make sure that we do not have duplicate
 		 */
-	} else if (data.type == "both") {
+	} else if (type == "both") {
 		let splitMessage = data.message.split(" ");
 		let dateStr =
 			splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2];
