@@ -1,4 +1,4 @@
-# Tugas Besar 2 IF2211 Strategi Algoritma
+# Tugas Besar 3 IF2211 Strategi Algoritma
 
 > Membangun sebuah aplikasi <em>DNA Pattern Matching</em> dengan memanfaatkan algoritma <em>String Matching</em> dan <em>Rgular Expression</em> yang di mana aplikasi ini dapat mendeteksi apakah seorang pasien mempunyai genetik tertentu dengan mencocokkan rantai DNA pasien dengan rantai DNA penyakit.
 
