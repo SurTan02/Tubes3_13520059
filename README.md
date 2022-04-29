@@ -43,13 +43,82 @@ https://github.com/loopfree/DNAsaurus
 
 ## Cara Memakai
 
+<strong><ins>NOTE:</ins></strong> Untuk pemakaian local, perlu diminta `.env` kepada [loopfree](https://github.com/loopfree) atau meminta via [issues](https://github.com/SurTan02/Tubes3_13520059/issues)
+
+### Via Browser
+
 1. Buka browser <strong><em>Chromium Based</em></strong>
 
 2. Ketikkan
+    ```bash
+    https://dnasaurus.herokuapp.com/
+    ```
 
-```bash
-https://dnasaurus.herokuapp.com/
-```
+### Via Local (1)
+
+<strong>NOTE:</strong> Back-End Serve Front-End
+
+1. Download/Clone Repository ini
+
+2. Jalankan Terminal
+
+3. Masuk ke dalam directory src
+
+4. Lakukan Penginstallan Dependencies
+
+    ```bash
+    npm install
+    ```
+
+5. Jalankan
+
+    ```bash
+    npm run build
+    ```
+
+6. Jalankan
+    ```bash
+    npm run test
+    ```
+7. Pada browser <strong><em>Chromium Based</em></strong> Ketikkan
+    ```bash
+    http://localhost:8000/
+    ```
+    <strong>Pastikan tidak ada yang sedang berjalan pada port 8000</strong>
+
+### Via Local (2)
+
+<strong>NOTE:</strong> Back End Hanya Rest API, Front End Pakai Vue Untuk Serve
+
+1. Download/Clone Repository ini
+
+2. Jalankan Terminal
+
+3. Masuk ke dalam directory src
+
+4. Lakukan Penginstallan Dependencies
+
+    ```bash
+    npm install
+    ```
+
+5. Jalankan
+
+    ```bash
+    npm run serve
+    ```
+
+6. Jalankan Pada Terminal Yang Berbeda
+
+    ```bash
+    npm run test
+    ```
+
+7. Pada browser <strong><em>Chromium Based</em></strong> Ketikkan
+    ```bash
+    http://localhost:8080/
+    ```
+    <strong>Pastikan tidak ada yang sedang berjalan pada port 8000</strong>
 
 ## Tampilan GUI Aplikasi DNAsaurus
 
