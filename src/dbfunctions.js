@@ -107,6 +107,18 @@ async function getUserFromDateAndDisease(mongoClient, date, diseaseName) {
 	return result;
 }
 
+async function getUser(mongoClient) {
+	let result = [];
+	const resultCursor = await mongoClient
+		.db("myFirstDatabase")
+		.collection("user")
+		.find()
+		.forEach((data) => {
+			result.push(data);
+		});
+	return result;
+}
+
 module.exports = {
 	insertNewDisease: insertNewDisease,
 	insertNewUser: insertNewUser,
@@ -114,4 +126,5 @@ module.exports = {
 	getUserFromDate: getUserFromDate,
 	getUserFromDisease: getUserFromDisease,
 	getUserFromDateAndDisease: getUserFromDateAndDisease,
+	getUser: getUser,
 };

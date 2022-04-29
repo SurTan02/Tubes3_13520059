@@ -56,6 +56,11 @@ function getMatch(str1, str2) {
 	return result;
 }
 
+/**
+ * this function checks for similiarity between two strings
+ * and returns a percentage.
+ * str2.length < str1.length
+ */
 function hamming(str1, str2) {
 	let index = 0;
 	let strLen = str2.length;
@@ -69,6 +74,22 @@ function hamming(str1, str2) {
 	}
 
 	return (matchNum * 100) / strLen;
+}
+
+/**
+ * this function returns a percentage
+ * in similiarity between two strings
+ * str2.length < str1.length
+ */
+function autocomplete(str1, str2) {
+	let idx = 0;
+	for (let i = 0; i < str2.length; ++i) {
+		if (str1[i] !== str2[i]) {
+			break;
+		}
+		idx++;
+	}
+	return (idx * 100) / str1.length;
 }
 
 /**
@@ -124,9 +145,9 @@ app.post("/api/check-disease", async function (req, res) {
 				isInfected = false;
 			}
 			// if(bm(data.userGene, disease.geme) !== -1) {
-			// 	isInfected = true;
+			//  isInfected = true;
 			// } else {
-			// 	isInfected = false;
+			//  isInfected = false;
 			// }
 			if (isInfected) {
 				percentage = 100;
@@ -181,8 +202,6 @@ app.post("/api/list-disease", async function (req, res) {
 			type = "both";
 		}
 	}
-
-	console.log(type);
 	/**
 	 * the request from front end is separated to different types as
 	 * specified by the specification for the three methods of input
@@ -191,22 +210,66 @@ app.post("/api/list-disease", async function (req, res) {
 	if (type == "date") {
 		result = await dbfunction.getUserFromDate(mongoClient, data.message);
 	} else if (type == "disease") {
-		result = await dbfunction.getUserFromDisease(mongoClient, data.message);
+		// result = await dbfunction.getUserFromDisease(mongoClient, data.message);
+		result = [];
+		let userInput = data.message;
+		let tempArr = await dbfunction.getUser(mongoClient);
+		for (let i = 0; i < tempArr.length; ++i) {
+			let temp = tempArr[i];
+			let shorter;
+			let longer;
+			if (userInput.length <= temp.disease.length) {
+				shorter = userInput;
+				longer = temp.disease;
+			} else {
+				shorter = temp.disease;
+				longer = userInput;
+			}
+
+			console.log(longer, shorter, autocomplete(longer, shorter));
+			if (autocomplete(longer, shorter) >= 80) {
+				result.push(temp);
+			}
+		}
 		/**
 		 * get data from both date and disease
 		 * using set to make sure that we do not have duplicate
 		 */
 	} else if (type == "both") {
+		result = [];
 		let splitMessage = data.message.split(" ");
 		let dateStr =
 			splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2];
 		let diseaseStr = splitMessage[3];
+		let tempArr = await dbfunction.getUser(mongoClient);
+		for (let i = 0; i < tempArr.length; ++i) {
+			let temp = tempArr[i];
+			if (dateStr === temp.date) {
+				let shorter;
+				let longer;
+				if (diseaseStr.length <= temp.disease.length) {
+					shorter = diseaseStr;
+					longer = temp.disease;
+				} else {
+					shorter = temp.disease;
+					longer = diseaseStr;
+				}
 
-		result = await dbfunction.getUserFromDateAndDisease(
-			mongoClient,
-			dateStr,
-			diseaseStr
-		);
+				if (autocomplete(longer, shorter) >= 80) {
+					result.push(temp);
+				}
+			}
+		}
+		// let splitMessage = data.message.split(" ");
+		// let dateStr =
+		//  splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2];
+		// let diseaseStr = splitMessage[3];
+
+		// result = await dbfunction.getUserFromDateAndDisease(
+		//  mongoClient,
+		//  dateStr,
+		//  diseaseStr
+		// );
 	}
 
 	let hasResult = false;
