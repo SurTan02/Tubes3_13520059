@@ -153,7 +153,7 @@ app.post("/api/check-disease", async function (req, res) {
 				percentage = 100;
 			} else {
 				percentage = hamming(data.userGene, disease.gene);
-				if (percentage > 80) {
+				if (percentage >= 80) {
 					isInfected = true;
 				}
 			}
