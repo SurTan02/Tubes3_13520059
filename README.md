@@ -118,7 +118,7 @@ https://github.com/loopfree/DNAsaurus
     ```bash
     http://localhost:8080/
     ```
-    <strong>Pastikan tidak ada yang sedang berjalan pada port 8000</strong>
+    <strong>Pastikan tidak ada yang sedang berjalan pada port 8080</strong>
 
 ## Tampilan GUI Aplikasi DNAsaurus
 
